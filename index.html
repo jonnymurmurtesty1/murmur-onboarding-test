@@ -43,21 +43,41 @@
     .stars {
       position: fixed;
       inset: 0 0 calc(100% - var(--horizon)) 0;
-      background-image:
-        radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%),
-        radial-gradient(1px 1px at 27% 42%, #fff 50%, transparent 51%),
-        radial-gradient(2px 2px at 44% 12%, #fff 50%, transparent 51%),
-        radial-gradient(1px 1px at 63% 30%, #fff 50%, transparent 51%),
-        radial-gradient(1px 1px at 78% 8%,  #fff 50%, transparent 51%),
-        radial-gradient(2px 2px at 88% 36%, #fff 50%, transparent 51%),
-        radial-gradient(1px 1px at 6% 48%,  #fff 50%, transparent 51%),
-        radial-gradient(1px 1px at 55% 50%, #fff 50%, transparent 51%),
-        radial-gradient(1px 1px at 94% 22%, #fff 50%, transparent 51%),
-        radial-gradient(1px 1px at 35% 26%, #fff 50%, transparent 51%);
-      animation: twinkle 4s ease-in-out infinite alternate;
+      pointer-events: none;
     }
 
-    @keyframes twinkle { from { opacity: .45; } to { opacity: 1; } }
+    /* Each star is a single pixel that breathes on its own clock (set inline by JS). */
+    .star {
+      --s: 2px;
+      --c: #fff;
+      position: absolute;
+      width: var(--s);
+      height: var(--s);
+      background: var(--c);
+      box-shadow: 0 0 4px var(--c);
+      opacity: .25;
+      animation: twinkle var(--d, 3s) ease-in-out var(--delay, 0s) infinite;
+    }
+
+    /* Bright stars flare into a pixel "+" glint now and then. */
+    .star.glint {
+      --s: 3px;
+      box-shadow:
+        var(--s) 0 0 var(--c), calc(-1 * var(--s)) 0 0 var(--c),
+        0 var(--s) 0 var(--c), 0 calc(-1 * var(--s)) 0 var(--c),
+        0 0 14px 3px var(--c);
+      animation-name: glint;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: .2; transform: scale(.7); }
+      50%      { opacity: 1;  transform: scale(1); }
+    }
+
+    @keyframes glint {
+      0%, 60%, 100% { opacity: .4; transform: scale(.55); }
+      78%           { opacity: 1;  transform: scale(1.25); }
+    }
 
     /* ---------- Sun ---------- */
     .sun {
@@ -276,13 +296,14 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .grid, .stars, h1, .press-start { animation: none; }
+      .grid, .star, h1, .press-start { animation: none; }
+      .star { opacity: .7; }
     }
   </style>
 </head>
 <body>
   <div class="sky"></div>
-  <div class="stars"></div>
+  <div class="stars" aria-hidden="true"></div>
   <div class="sun"></div>
   <svg class="mountains" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0 120 L90 60 L160 95 L260 30 L360 90 L420 70 L520 110 L680 110 L780 55 L850 85 L950 20 L1060 80 L1120 62 L1200 100 L1200 120 Z"
@@ -351,6 +372,28 @@
       }));
       const unicorn = document.getElementById("unicorn");
       unicorn.innerHTML = `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">${rects.join("")}</svg>`;
+
+      /* ---------- Twinkling starfield ---------- */
+      const STAR_TINTS = ["#fff", "#fff", "#fff", "#fff", "#bdf6ff", "#ffd1f3"];
+      const starfield = document.querySelector(".stars");
+      const starCount = Math.round(Math.min(110, Math.max(45, innerWidth * innerHeight / 12000)));
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement("span");
+        const glint = Math.random() < 0.12;
+        star.className = glint ? "star glint" : "star";
+        const size = glint ? 3 : (Math.random() < 0.35 ? 3 : 2);
+        const duration = glint ? 4 + Math.random() * 4 : 2 + Math.random() * 3;
+        star.style.cssText = [
+          `left:${(Math.random() * 100).toFixed(2)}%`,
+          // Bias toward the top of the sky so the horizon glow stays clean.
+          `top:${(Math.pow(Math.random(), 1.4) * 92).toFixed(2)}%`,
+          `--s:${size}px`,
+          `--c:${STAR_TINTS[(Math.random() * STAR_TINTS.length) | 0]}`,
+          `--d:${duration.toFixed(2)}s`,
+          `--delay:${(-Math.random() * duration).toFixed(2)}s`,
+        ].join(";");
+        starfield.append(star);
+      }
 
       /* ---------- Sparkle trail ---------- */
       const canvas = document.getElementById("sparkles");
