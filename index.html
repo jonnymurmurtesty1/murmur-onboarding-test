@@ -3,496 +3,584 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Murmur Onboarding Works!</title>
+  <title>Confetti Weather</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ink: #0b0221;
-      --sky-top: #0b0221;
-      --sky-mid: #2a0845;
-      --sky-low: #6a1b6b;
-      --pink: #ff2a6d;
-      --magenta: #ff4ecd;
-      --cyan: #05d9e8;
-      --sun-top: #ffe45e;
-      --sun-low: #ff2a6d;
-      --horizon: 58%;
+      --bg-a: #ff9a8b;
+      --bg-b: #ff6a88;
+      --bg-c: #ff99ac;
+      --card: rgba(255, 255, 255, 0.82);
+      --ink: #2b1d3a;
+      --muted: #6b5b7b;
+      --accent: #7b2ff7;
+      --accent-2: #f107a3;
+      --radius: 24px;
     }
 
     * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
-      height: 100%;
-      overflow: hidden;
-      background: var(--ink);
-      color: #fff;
-      font-family: "Press Start 2P", ui-monospace, monospace;
-      cursor: none;
+      min-height: 100%;
+      font-family: "Fredoka", system-ui, sans-serif;
+      color: var(--ink);
     }
 
-    /* ---------- Sky ---------- */
-    .sky {
+    body {
+      background: linear-gradient(135deg, var(--bg-a), var(--bg-b) 50%, var(--bg-c));
+      background-size: 300% 300%;
+      animation: drift 18s ease-in-out infinite;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px 60px;
+    }
+
+    @keyframes drift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    body.sunny  { --bg-a: #fddb92; --bg-b: #ffb347; --bg-c: #ff7eb3; }
+    body.cloudy { --bg-a: #c9d6ff; --bg-b: #a1b5e8; --bg-c: #e2e2e2; }
+    body.rainy  { --bg-a: #4facfe; --bg-b: #5f72bd; --bg-c: #9b23ea; }
+    body.snowy  { --bg-a: #e0f7ff; --bg-b: #a8edea; --bg-c: #d7c9ff; }
+    body.stormy { --bg-a: #434343; --bg-b: #5b247a; --bg-c: #1bcedf; }
+    body.foggy  { --bg-a: #d7d2cc; --bg-b: #bdc3c7; --bg-c: #a1c4fd; }
+
+    #confetti {
       position: fixed;
       inset: 0;
-      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 35%, var(--sky-low) var(--horizon), var(--ink) var(--horizon));
-    }
-
-    .stars {
-      position: fixed;
-      inset: 0 0 calc(100% - var(--horizon)) 0;
-      pointer-events: none;
-    }
-
-    /* Each star is a single pixel that breathes on its own clock (set inline by JS). */
-    .star {
-      --s: 2px;
-      --c: #fff;
-      position: absolute;
-      width: var(--s);
-      height: var(--s);
-      background: var(--c);
-      box-shadow: 0 0 4px var(--c);
-      opacity: .25;
-      animation: twinkle var(--d, 3s) ease-in-out var(--delay, 0s) infinite;
-    }
-
-    /* Bright stars flare into a pixel "+" glint now and then. */
-    .star.glint {
-      --s: 3px;
-      box-shadow:
-        var(--s) 0 0 var(--c), calc(-1 * var(--s)) 0 0 var(--c),
-        0 var(--s) 0 var(--c), 0 calc(-1 * var(--s)) 0 var(--c),
-        0 0 14px 3px var(--c);
-      animation-name: glint;
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: .2; transform: scale(.7); }
-      50%      { opacity: 1;  transform: scale(1); }
-    }
-
-    @keyframes glint {
-      0%, 60%, 100% { opacity: .4; transform: scale(.55); }
-      78%           { opacity: 1;  transform: scale(1.25); }
-    }
-
-    /* ---------- Sun ---------- */
-    .sun {
-      position: fixed;
-      left: 50%;
-      bottom: calc(100% - var(--horizon));
-      width: min(46vmin, 420px);
-      aspect-ratio: 1;
-      transform: translateX(-50%);
-      border-radius: 50%;
-      background: linear-gradient(180deg, var(--sun-top) 10%, #ff9a3c 45%, var(--sun-low) 80%);
-      box-shadow: 0 0 80px 10px rgba(255, 42, 109, .45);
-      /* Classic synthwave slats: bands that thicken toward the horizon */
-      -webkit-mask: linear-gradient(180deg,
-        #000 0 52%, transparent 52% 55%,
-        #000 55% 64%, transparent 64% 68%,
-        #000 68% 76%, transparent 76% 81%,
-        #000 81% 87%, transparent 87% 93%,
-        #000 93% 97%, transparent 97% 100%);
-              mask: linear-gradient(180deg,
-        #000 0 52%, transparent 52% 55%,
-        #000 55% 64%, transparent 64% 68%,
-        #000 68% 76%, transparent 76% 81%,
-        #000 81% 87%, transparent 87% 93%,
-        #000 93% 97%, transparent 97% 100%);
-    }
-
-    /* ---------- Mountains ---------- */
-    .mountains {
-      position: fixed;
-      left: 0; right: 0;
-      bottom: calc(100% - var(--horizon));
-      height: clamp(48px, 12vh, 130px);
       width: 100%;
-    }
-
-    /* ---------- Perspective grid ---------- */
-    .grid-wrap {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      top: var(--horizon);
-      perspective: 320px;
-      perspective-origin: 50% 0%;
-      overflow: hidden;
-      background: linear-gradient(180deg, #1a0433, var(--ink) 60%);
-    }
-
-    .grid {
-      position: absolute;
-      left: -100%;
-      width: 300%;
-      height: 200%;
-      top: 0;
-      transform-origin: 50% 0;
-      transform: rotateX(72deg);
-      background-image:
-        linear-gradient(var(--magenta) 2px, transparent 2px),
-        linear-gradient(90deg, var(--magenta) 2px, transparent 2px);
-      background-size: 60px 60px;
-      filter: drop-shadow(0 0 4px var(--magenta));
-      animation: drive 1.2s linear infinite;
-    }
-
-    @keyframes drive { to { background-position: 0 60px; } }
-
-    /* Fade the grid into the horizon haze */
-    .grid-wrap::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, var(--sky-low) 0%, rgba(106, 27, 107, .35) 18%, transparent 45%);
+      height: 100%;
       pointer-events: none;
+      z-index: 10;
     }
 
-    .horizon-line {
-      position: fixed;
-      left: 0; right: 0;
-      top: var(--horizon);
-      height: 2px;
-      background: var(--pink);
-      box-shadow: 0 0 12px 2px var(--pink), 0 0 40px 6px rgba(255, 42, 109, .5);
-    }
-
-    /* ---------- CRT overlay ---------- */
-    .scanlines {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);
-      mix-blend-mode: multiply;
-      z-index: 5;
-    }
-
-    .vignette {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);
-      z-index: 5;
-    }
-
-    /* ---------- Hero ---------- */
-    .hero {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-content: center;
-      justify-items: center;
-      gap: clamp(18px, 3vh, 32px);
-      padding: 0 6vw;
-      text-align: center;
-      z-index: 3;
-      transform: translateY(-12vh);
-    }
-
-    .kicker {
-      margin: 0;
-      font-size: clamp(9px, 1.1vw, 12px);
-      letter-spacing: .35em;
-      color: var(--cyan);
-      text-shadow: 0 0 8px var(--cyan);
+    main {
+      width: 100%;
+      max-width: 560px;
+      position: relative;
+      z-index: 1;
     }
 
     h1 {
-      margin: 0;
-      font-family: "Monoton", "Press Start 2P", cursive;
-      font-weight: 400;
-      font-size: clamp(34px, 8.6vw, 132px);
-      line-height: .95;
-      letter-spacing: .02em;
-      text-transform: uppercase;
-      background: linear-gradient(180deg, #fff 0%, #ffd1f3 30%, var(--magenta) 55%, var(--pink) 70%, #7b2ff7 100%);
-      -webkit-background-clip: text;
-              background-clip: text;
-      color: transparent;
-      filter:
-        drop-shadow(0 0 2px rgba(255,255,255,.8))
-        drop-shadow(0 0 18px rgba(255, 78, 205, .75))
-        drop-shadow(0 6px 0 rgba(11, 2, 33, .9));
-      animation: flicker 6s infinite;
-    }
-
-    h1 .line { display: block; }
-
-    h1 .accent {
-      font-family: "Press Start 2P", monospace;
-      font-size: .34em;
-      letter-spacing: .12em;
-      margin-top: .5em;
-      background: linear-gradient(180deg, #fff, var(--cyan));
-      -webkit-background-clip: text;
-              background-clip: text;
-      filter: drop-shadow(0 3px 0 var(--ink)) drop-shadow(0 0 10px var(--cyan));
-    }
-
-    @keyframes flicker {
-      0%, 92%, 100% { opacity: 1; }
-      93% { opacity: .55; }
-      94% { opacity: 1; }
-      96% { opacity: .7; }
-      97% { opacity: 1; }
-    }
-
-    .press-start {
-      margin: clamp(8px, 2vh, 20px) 0 0;
-      font-size: clamp(10px, 1.2vw, 14px);
-      letter-spacing: .2em;
-      color: var(--sun-top);
-      text-shadow: 0 0 8px rgba(255, 228, 94, .8);
-      animation: blink 1.1s steps(2, start) infinite;
-    }
-
-    @keyframes blink { to { visibility: hidden; } }
-
-    .hud {
-      position: fixed;
-      top: 20px;
-      left: 24px; right: 24px;
-      display: flex;
-      justify-content: space-between;
-      font-size: clamp(8px, 1vw, 11px);
-      letter-spacing: .15em;
+      font-size: clamp(2.2rem, 7vw, 3.4rem);
+      font-weight: 700;
+      text-align: center;
+      margin: 0 0 6px;
       color: #fff;
-      opacity: .85;
-      z-index: 4;
-      text-shadow: 0 0 6px var(--magenta);
+      text-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 10px 30px rgba(0,0,0,0.15);
+      letter-spacing: 0.5px;
     }
 
-    .hud b { color: var(--cyan); font-weight: 400; }
-
-    /* ---------- Cursor + sparkles ---------- */
-    #sparkles {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 8;
+    h1 .bounce {
+      display: inline-block;
+      animation: bob 2.4s ease-in-out infinite;
     }
 
-    #unicorn {
-      position: fixed;
-      left: 0; top: 0;
-      width: 48px;
-      height: 48px;
-      pointer-events: none;
-      z-index: 9;
-      image-rendering: pixelated;
-      filter: drop-shadow(0 0 6px rgba(255, 78, 205, .9));
-      transform: translate3d(-100px, -100px, 0);
-      will-change: transform;
+    @keyframes bob {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      50% { transform: translateY(-8px) rotate(6deg); }
     }
 
-    #unicorn svg { display: block; width: 100%; height: 100%; }
+    .today {
+      width: fit-content;
+      margin: 0 auto 14px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(43, 29, 58, 0.35);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
 
-    @media (hover: none) {
-      html, body { cursor: auto; }
+    .tagline {
+      text-align: center;
+      color: rgba(255,255,255,0.92);
+      margin: 0 0 28px;
+      font-size: 1.05rem;
+    }
+
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(43, 29, 58, 0.18);
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      font-size: 1.25rem;
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 3px solid transparent;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      letter-spacing: 2px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    button {
+      font: inherit;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: 14px 22px;
+      border: none;
+      border-radius: 16px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      cursor: pointer;
+      box-shadow: 0 6px 0 #4a1a99;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    button:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #4a1a99; }
+    button:active { transform: translateY(4px); box-shadow: 0 2px 0 #4a1a99; }
+    button:disabled { opacity: 0.6; cursor: wait; }
+
+    .message {
+      text-align: center;
+      margin: 18px 0 0;
+      min-height: 1.4em;
+      color: var(--muted);
+    }
+
+    .message.error { color: #c0134a; font-weight: 500; }
+
+    #result {
+      margin-top: 20px;
+      display: none;
+    }
+
+    #result.show {
+      display: block;
+      animation: pop 0.5s cubic-bezier(.2, 1.6, .4, 1);
+    }
+
+    @keyframes pop {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .place {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .place small {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .now {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin: 12px 0 4px;
+    }
+
+    .big-icon {
+      font-size: 5rem;
+      line-height: 1;
+      animation: bob 3s ease-in-out infinite;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .temp {
+      font-size: 4.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .desc {
+      text-align: center;
+      font-size: 1.2rem;
+      margin: 0 0 18px;
+      text-transform: capitalize;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .stat .label { font-size: 0.8rem; color: var(--muted); }
+    .stat .value { font-size: 1.15rem; font-weight: 600; }
+
+    .forecast {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .day {
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px 4px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .day:hover { transform: translateY(-4px) rotate(-2deg); }
+    .day .name { font-size: 0.85rem; font-weight: 600; }
+    .day .icon { font-size: 1.8rem; margin: 4px 0; }
+    .day .hi { font-weight: 600; }
+    .day .lo { color: var(--muted); font-size: 0.9rem; }
+
+    footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.85);
+    }
+
+    footer a { color: #fff; }
+
+    @media (max-width: 440px) {
+      form { flex-direction: column; }
+      .temp { font-size: 3.6rem; }
+      .big-icon { font-size: 4rem; }
+      .forecast { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+      .day .icon { font-size: 1.4rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .grid, .star, h1, .press-start { animation: none; }
-      .star { opacity: .7; }
+      *, *::before, *::after { animation: none !important; }
     }
   </style>
 </head>
 <body>
-  <div class="sky"></div>
-  <div class="stars" aria-hidden="true"></div>
-  <div class="sun"></div>
-  <svg class="mountains" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0 120 L90 60 L160 95 L260 30 L360 90 L420 70 L520 110 L680 110 L780 55 L850 85 L950 20 L1060 80 L1120 62 L1200 100 L1200 120 Z"
-          fill="#1a0433" stroke="#05d9e8" stroke-width="1.5" stroke-opacity=".7" vector-effect="non-scaling-stroke" />
-  </svg>
-  <div class="grid-wrap"><div class="grid"></div></div>
-  <div class="horizon-line"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
 
-  <header class="hud" aria-hidden="true">
-    <span>1UP <b>001984</b></span>
-    <span>HI-SCORE <b>999999</b></span>
-  </header>
+  <main>
+    <p id="today" class="today"></p>
+    <h1><span class="bounce">🎉</span> Confetti Weather <span class="bounce">☀️</span></h1>
+    <p class="tagline">Every forecast is a party. Enter a US zip code!</p>
 
-  <main class="hero">
-    <p class="kicker">★ PLAYER ONE READY ★</p>
-    <h1>
-      <span class="line">Murmur</span>
-      <span class="line">Onboarding</span>
-      <span class="line accent">WORKS!</span>
-    </h1>
-    <p class="press-start">PRESS START</p>
+    <section class="card">
+      <form id="search">
+        <input id="zip" type="text" inputmode="numeric" pattern="\d{5}" maxlength="5"
+               placeholder="e.g. 90210" aria-label="Zip code" autocomplete="postal-code" required />
+        <button id="go" type="submit">Get Weather</button>
+      </form>
+
+      <p id="message" class="message" role="status"></p>
+
+      <div id="result" aria-live="polite">
+        <p class="place"><span id="city"></span><small id="coords"></small></p>
+        <div class="now">
+          <div id="icon" class="big-icon" title="Click me!">🌤️</div>
+          <div id="temp" class="temp">--°</div>
+        </div>
+        <p id="desc" class="desc"></p>
+        <div class="stats">
+          <div class="stat"><div class="label">Feels like</div><div id="feels" class="value">--</div></div>
+          <div class="stat"><div class="label">Humidity</div><div id="humidity" class="value">--</div></div>
+          <div class="stat"><div class="label">Wind</div><div id="wind" class="value">--</div></div>
+        </div>
+        <div id="forecast" class="forecast"></div>
+      </div>
+    </section>
+
+    <footer>
+      Weather by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> ·
+      Zip lookup by <a href="https://www.zippopotam.us/" target="_blank" rel="noopener">Zippopotam.us</a>
+    </footer>
   </main>
 
-  <canvas id="sparkles"></canvas>
-  <div id="unicorn" aria-hidden="true"></div>
-
-  <div class="scanlines"></div>
-  <div class="vignette"></div>
-
   <script>
-    (() => {
-      /* ---------- Pixel unicorn glyph (16×16) ---------- */
-      const PALETTE = {
-        k: "#1b0b3a", // outline
-        w: "#ffffff", // body
-        s: "#e7d9ff", // body shade
-        y: "#ffe45e", // horn
-        p: "#ff2a6d", // mane pink
-        m: "#ff4ecd", // mane magenta
-        c: "#05d9e8", // mane cyan
-        v: "#7b2ff7", // mane violet
-        e: "#1b0b3a", // eye
-      };
-      const SPRITE = [
-        "......y.........",
-        ".....yk.........",
-        "....kyk.........",
-        "...kwwkpm.......",
-        "..kwwwwkmc......",
-        ".kwewwwwkcv.....",
-        ".kwwwwwwwkvp....",
-        "kwwwwwwwwwkpm...",
-        ".kkkwwwwwwwkm...",
-        "...kwwwwwwwwkc..",
-        "...kwwwwwwwwwkv.",
-        "...kwwssswwwwwkp",
-        "...kwkkkkkwkwwkm",
-        "...kwk...kwkkwkc",
-        "...kk....kk..kk.",
-        "................",
-      ];
-      const size = SPRITE.length;
-      const rects = [];
-      SPRITE.forEach((row, y) => [...row].forEach((ch, x) => {
-        if (PALETTE[ch]) rects.push(`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${PALETTE[ch]}"/>`);
-      }));
-      const unicorn = document.getElementById("unicorn");
-      unicorn.innerHTML = `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">${rects.join("")}</svg>`;
+    // ---------- Weather code → emoji / description / theme ----------
+    // WMO codes: https://open-meteo.com/en/docs
+    const WEATHER = {
+      0:  ["☀️", "clear sky", "sunny"],
+      1:  ["🌤️", "mostly clear", "sunny"],
+      2:  ["⛅", "partly cloudy", "cloudy"],
+      3:  ["☁️", "overcast", "cloudy"],
+      45: ["🌫️", "fog", "foggy"],
+      48: ["🌫️", "icy fog", "foggy"],
+      51: ["🌦️", "light drizzle", "rainy"],
+      53: ["🌦️", "drizzle", "rainy"],
+      55: ["🌧️", "heavy drizzle", "rainy"],
+      56: ["🌧️", "freezing drizzle", "rainy"],
+      57: ["🌧️", "freezing drizzle", "rainy"],
+      61: ["🌦️", "light rain", "rainy"],
+      63: ["🌧️", "rain", "rainy"],
+      65: ["🌧️", "heavy rain", "rainy"],
+      66: ["🌧️", "freezing rain", "rainy"],
+      67: ["🌧️", "freezing rain", "rainy"],
+      71: ["🌨️", "light snow", "snowy"],
+      73: ["🌨️", "snow", "snowy"],
+      75: ["❄️", "heavy snow", "snowy"],
+      77: ["❄️", "snow grains", "snowy"],
+      80: ["🌦️", "rain showers", "rainy"],
+      81: ["🌧️", "rain showers", "rainy"],
+      82: ["⛈️", "violent showers", "stormy"],
+      85: ["🌨️", "snow showers", "snowy"],
+      86: ["❄️", "heavy snow showers", "snowy"],
+      95: ["⛈️", "thunderstorm", "stormy"],
+      96: ["⛈️", "thunderstorm with hail", "stormy"],
+      99: ["⛈️", "thunderstorm with hail", "stormy"],
+    };
+    const lookup = code => WEATHER[code] || ["🌈", "mystery weather", "sunny"];
 
-      /* ---------- Twinkling starfield ---------- */
-      const STAR_TINTS = ["#fff", "#fff", "#fff", "#fff", "#bdf6ff", "#ffd1f3"];
-      const starfield = document.querySelector(".stars");
-      const starCount = Math.round(Math.min(110, Math.max(45, innerWidth * innerHeight / 12000)));
-      for (let i = 0; i < starCount; i++) {
-        const star = document.createElement("span");
-        const glint = Math.random() < 0.12;
-        star.className = glint ? "star glint" : "star";
-        const size = glint ? 3 : (Math.random() < 0.35 ? 3 : 2);
-        const duration = glint ? 4 + Math.random() * 4 : 2 + Math.random() * 3;
-        star.style.cssText = [
-          `left:${(Math.random() * 100).toFixed(2)}%`,
-          // Bias toward the top of the sky so the horizon glow stays clean.
-          `top:${(Math.pow(Math.random(), 1.4) * 92).toFixed(2)}%`,
-          `--s:${size}px`,
-          `--c:${STAR_TINTS[(Math.random() * STAR_TINTS.length) | 0]}`,
-          `--d:${duration.toFixed(2)}s`,
-          `--delay:${(-Math.random() * duration).toFixed(2)}s`,
-        ].join(";");
-        starfield.append(star);
+    // Confetti palette + shapes tuned to the weather
+    const CONFETTI_STYLE = {
+      sunny:  { colors: ["#ffd93d", "#ff8e3c", "#ff5e78", "#fff3b0"], emoji: ["☀️", "😎"] },
+      cloudy: { colors: ["#ffffff", "#c9d6ff", "#8ea7e9", "#f7b2d9"], emoji: ["☁️"] },
+      rainy:  { colors: ["#4facfe", "#00f2fe", "#9b23ea", "#ffffff"], emoji: ["💧", "☔"] },
+      snowy:  { colors: ["#ffffff", "#a8edea", "#d7c9ff", "#bde0fe"], emoji: ["❄️", "⛄"] },
+      stormy: { colors: ["#ffe600", "#1bcedf", "#b388ff", "#ffffff"], emoji: ["⚡"] },
+      foggy:  { colors: ["#ffffff", "#bdc3c7", "#a1c4fd", "#fbc2eb"], emoji: ["🌫️"] },
+      party:  { colors: ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#f107a3"], emoji: ["🎉"] },
+    };
+
+    // ---------- Confetti engine ----------
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let pieces = [];
+    let running = false;
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    addEventListener("resize", resize);
+    resize();
+
+    function burst({ x = innerWidth / 2, y = innerHeight / 3, count = 160, style = "party", spread = Math.PI * 2 } = {}) {
+      if (reduceMotion) return;
+      const { colors, emoji } = CONFETTI_STYLE[style] || CONFETTI_STYLE.party;
+      for (let i = 0; i < count; i++) {
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * spread;
+        const speed = 6 + Math.random() * 10;
+        pieces.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: 6 + Math.random() * 8,
+          color: colors[(Math.random() * colors.length) | 0],
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.4,
+          wobble: Math.random() * 10,
+          shape: Math.random() < 0.12 ? "emoji" : Math.random() < 0.5 ? "rect" : "circle",
+          emoji: emoji[(Math.random() * emoji.length) | 0],
+          life: 0,
+          ttl: 180 + Math.random() * 120,
+        });
       }
+      if (!running) { running = true; requestAnimationFrame(tick); }
+    }
 
-      /* ---------- Sparkle trail ---------- */
-      const canvas = document.getElementById("sparkles");
-      const ctx = canvas.getContext("2d");
-      const COLORS = ["#ff2a6d", "#ff4ecd", "#05d9e8", "#ffe45e", "#7b2ff7", "#ffffff"];
-      const particles = [];
-      let dpr = 1;
+    function tick() {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      pieces = pieces.filter(p => p.life < p.ttl && p.y < innerHeight + 40);
+      for (const p of pieces) {
+        p.life++;
+        p.vy += 0.22;          // gravity
+        p.vx *= 0.985;         // air drag
+        p.vy *= 0.985;
+        p.wobble += 0.1;
+        p.x += p.vx + Math.sin(p.wobble) * 0.6;
+        p.y += p.vy;
+        p.rot += p.vrot;
+        const fade = Math.min(1, (p.ttl - p.life) / 40);
 
-      const resize = () => {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = innerWidth * dpr;
-        canvas.height = innerHeight * dpr;
-        canvas.style.width = innerWidth + "px";
-        canvas.style.height = innerHeight + "px";
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.imageSmoothingEnabled = false;
-      };
-      resize();
-      addEventListener("resize", resize);
-
-      const spawn = (x, y, count, burst = false) => {
-        for (let i = 0; i < count; i++) {
-          const a = Math.random() * Math.PI * 2;
-          const speed = burst ? 2 + Math.random() * 5 : Math.random() * 1.4;
-          particles.push({
-            x, y,
-            vx: Math.cos(a) * speed,
-            vy: Math.sin(a) * speed - (burst ? 1 : 0.3),
-            life: 1,
-            decay: 0.012 + Math.random() * 0.02,
-            size: 2 + Math.floor(Math.random() * 3),
-            color: COLORS[(Math.random() * COLORS.length) | 0],
-            star: Math.random() < 0.35,
-          });
-        }
-      };
-
-      // Chunky pixel sparkle: a "+" of squares, snapped to the pixel grid.
-      const drawStar = (p) => {
-        const s = p.size;
-        const x = Math.round(p.x / s) * s;
-        const y = Math.round(p.y / s) * s;
-        ctx.fillRect(x, y, s, s);
-        if (p.star && p.life > 0.35) {
-          ctx.fillRect(x - s, y, s, s);
-          ctx.fillRect(x + s, y, s, s);
-          ctx.fillRect(x, y - s, s, s);
-          ctx.fillRect(x, y + s, s, s);
-        }
-      };
-
-      const tick = () => {
-        ctx.clearRect(0, 0, innerWidth, innerHeight);
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.04;       // gentle gravity
-          p.vx *= 0.98;
-          p.life -= p.decay;
-          if (p.life <= 0) { particles.splice(i, 1); continue; }
-          ctx.globalAlpha = p.life;
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        if (p.shape === "emoji") {
+          ctx.font = `${p.size * 2.2}px serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(p.emoji, 0, 0);
+        } else {
           ctx.fillStyle = p.color;
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = 8;
-          drawStar(p);
-        }
-        ctx.globalAlpha = 1;
-        requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-
-      /* ---------- Cursor tracking ---------- */
-      // Sprite renders at 3px per pixel; the horn tip (6,0) is the hotspot.
-      const SCALE = 3, HOT_X = 6 * SCALE, HOT_Y = 0;
-      const TAIL_X = (15 - 6) * SCALE, TAIL_Y = 12 * SCALE;
-
-      const move = (x, y) => {
-        unicorn.style.transform = `translate3d(${x - HOT_X}px, ${y - HOT_Y}px, 0)`;
-        spawn(x + TAIL_X, y + TAIL_Y, 3);
-      };
-
-      addEventListener("pointermove", (e) => move(e.clientX, e.clientY));
-      addEventListener("pointerdown", (e) => spawn(e.clientX, e.clientY, 60, true));
-      addEventListener("pointerleave", () => { unicorn.style.transform = "translate3d(-100px,-100px,0)"; });
-
-      /* ---------- Konami code: rainbow overdrive ---------- */
-      const KONAMI = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];
-      let k = 0;
-      addEventListener("keydown", (e) => {
-        k = e.key === KONAMI[k] ? k + 1 : (e.key === KONAMI[0] ? 1 : 0);
-        if (k === KONAMI.length) {
-          k = 0;
-          for (let i = 0; i < 12; i++) {
-            setTimeout(() => spawn(Math.random() * innerWidth, Math.random() * innerHeight * 0.6, 50, true), i * 120);
+          if (p.shape === "rect") {
+            // scaleY flip makes the ribbon look like it's tumbling
+            ctx.scale(1, Math.cos(p.wobble));
+            ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.size / 3, 0, Math.PI * 2);
+            ctx.fill();
           }
         }
+        ctx.restore();
+      }
+      if (pieces.length) requestAnimationFrame(tick);
+      else { running = false; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+    }
+
+    function celebrate(style) {
+      burst({ x: innerWidth * 0.15, y: innerHeight * 0.9, count: 90, style, spread: Math.PI / 2.5 });
+      burst({ x: innerWidth * 0.85, y: innerHeight * 0.9, count: 90, style, spread: Math.PI / 2.5 });
+      setTimeout(() => burst({ count: 120, style }), 250);
+    }
+
+    // ---------- Weather lookup ----------
+    const $ = id => document.getElementById(id);
+    const form = $("search");
+    const zipInput = $("zip");
+    const goBtn = $("go");
+    const message = $("message");
+    const result = $("result");
+
+    $("today").textContent = new Date().toLocaleDateString("en-US", {
+      weekday: "long", month: "long", day: "numeric", year: "numeric",
+    });
+
+    function setMessage(text, isError = false) {
+      message.textContent = text;
+      message.classList.toggle("error", isError);
+    }
+
+    async function geocodeZip(zip) {
+      const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+      if (res.status === 404) throw new Error(`Hmm, couldn't find zip code ${zip}. 🤔`);
+      if (!res.ok) throw new Error("Zip code lookup failed. Try again in a sec!");
+      const data = await res.json();
+      const place = data.places[0];
+      return {
+        city: place["place name"],
+        state: place["state abbreviation"],
+        lat: parseFloat(place.latitude),
+        lon: parseFloat(place.longitude),
+      };
+    }
+
+    async function fetchWeather(lat, lon) {
+      const params = new URLSearchParams({
+        latitude: lat,
+        longitude: lon,
+        current: "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day",
+        daily: "weather_code,temperature_2m_max,temperature_2m_min",
+        temperature_unit: "fahrenheit",
+        wind_speed_unit: "mph",
+        timezone: "auto",
+        forecast_days: 5,
       });
-    })();
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+      if (!res.ok) throw new Error("The weather service is taking a nap. Try again!");
+      return res.json();
+    }
+
+    function render(place, zip, w) {
+      const c = w.current;
+      let [icon, desc, theme] = lookup(c.weather_code);
+      if (!c.is_day && theme === "sunny") icon = c.weather_code === 0 ? "🌙" : "🌛";
+
+      document.body.className = theme;
+      $("city").textContent = `${place.city}, ${place.state}`;
+      $("coords").textContent = `Zip ${zip}`;
+      $("icon").textContent = icon;
+      $("icon").dataset.theme = theme;
+      $("temp").textContent = `${Math.round(c.temperature_2m)}°`;
+      $("desc").textContent = desc;
+      $("feels").textContent = `${Math.round(c.apparent_temperature)}°`;
+      $("humidity").textContent = `${c.relative_humidity_2m}%`;
+      $("wind").textContent = `${Math.round(c.wind_speed_10m)} ${w.current_units.wind_speed_10m}`;
+
+      const days = w.daily.time.map((date, i) => {
+        const name = i === 0 ? "Today"
+          : new Date(date + "T12:00").toLocaleDateString(undefined, { weekday: "short" });
+        const [dIcon, dDesc] = lookup(w.daily.weather_code[i]);
+        return `<div class="day" title="${dDesc}">
+          <div class="name">${name}</div>
+          <div class="icon">${dIcon}</div>
+          <div class="hi">${Math.round(w.daily.temperature_2m_max[i])}°</div>
+          <div class="lo">${Math.round(w.daily.temperature_2m_min[i])}°</div>
+        </div>`;
+      });
+      $("forecast").innerHTML = days.join("");
+
+      result.classList.remove("show");
+      void result.offsetWidth; // restart the pop animation
+      result.classList.add("show");
+      return theme;
+    }
+
+    async function search(zip, { party = true } = {}) {
+      goBtn.disabled = true;
+      setMessage("Summoning the forecast… 🔮");
+      try {
+        const place = await geocodeZip(zip);
+        const weather = await fetchWeather(place.lat, place.lon);
+        const theme = render(place, zip, weather);
+        setMessage("");
+        if (party) celebrate(theme);
+        try { localStorage.setItem("confetti-weather-zip", zip); } catch {}
+      } catch (err) {
+        setMessage(err.message || "Something went wrong.", true);
+      } finally {
+        goBtn.disabled = false;
+      }
+    }
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const zip = zipInput.value.trim();
+      if (!/^\d{5}$/.test(zip)) {
+        setMessage("Zip codes are 5 digits — give it another go!", true);
+        return;
+      }
+      search(zip);
+    });
+
+    zipInput.addEventListener("input", () => {
+      zipInput.value = zipInput.value.replace(/\D/g, "").slice(0, 5);
+    });
+
+    // Click the big weather icon for a bonus burst
+    $("icon").addEventListener("click", e => {
+      const r = e.currentTarget.getBoundingClientRect();
+      burst({ x: r.left + r.width / 2, y: r.top + r.height / 2, count: 80, style: e.currentTarget.dataset.theme });
+    });
+
+    // Restore the last-searched zip
+    try {
+      localStorage.removeItem("confetti-weather-unit"); // left over from the old °F/°C toggle
+      const savedZip = localStorage.getItem("confetti-weather-zip");
+      if (savedZip) { zipInput.value = savedZip; search(savedZip, { party: false }); }
+    } catch {}
+
+    // A little welcome party
+    setTimeout(() => burst({ count: 100 }), 300);
   </script>
 </body>
 </html>
